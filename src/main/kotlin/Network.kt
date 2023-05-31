@@ -8,8 +8,8 @@ import kotlin.math.pow
 class Network(
     private val inputData: InputData
 ) {
-    private val n = 0.1
-    private val alpha = 0.8
+    private val n = 0.3
+    private val alpha = 0.6
     private var input: MutableList<InputNeuron> = mutableListOf()
     private val hidden: MutableList<HiddenNeuron> = mutableListOf()
     private val output: MutableList<OutputNeuron> = mutableListOf()
