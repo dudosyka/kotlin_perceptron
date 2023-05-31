@@ -31,25 +31,30 @@ fun Application.mainModule() {
     }
     routing {
         post("/") {
-            val input = call.receive<InputData>()
+            val input = call.receive<List<InputData>>()
+            val output : MutableList<OutputData> = mutableListOf()
             println(input)
-            val network = Network(input)
-            network.run()
-            try {
-                val newWeights = network.backPropagation()
+            input.forEach {
+                val network = Network(it)
+                network.run()
+                try {
+                    val newWeights = network.backPropagation()
 
-                val output = OutputData(
-                    pvk = network.getResult(),
-                    mistake = network.getMistakeMetric().round(4),
-                    hiddenMatrix = newWeights.first,
-                    outputMatrix = newWeights.second
-                )
-                call.respond(output)
-            } catch (e: Exception) {
-                println(e)
-                println(e.stackTraceToString())
-                call.respond("output")
+                    val out = OutputData(
+                        pvk = network.getResult(),
+                        mistake = network.getMistakeMetric().round(4),
+                        hiddenMatrix = newWeights.first,
+                        outputMatrix = newWeights.second
+                    )
+                    output.add(out)
+
+                } catch (e: Exception) {
+                    println(e)
+                    println(e.stackTraceToString())
+                    call.respond("output")
+                }
             }
+            call.respond(output)
         }
     }
 }
