@@ -9,15 +9,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import java.math.BigDecimal
 import kotlin.math.pow
 
 fun Double.round(decimals: Int = 6): Double {
-    var multiplier = 10.0.pow(decimals)
+    val multiplier = 10.0.pow(decimals)
     return kotlin.math.round((this * multiplier)) / multiplier
 }
 
-fun main(args: Array<String>) {
+fun main() {
     embeddedServer(Netty, port = 8080, module = Application::mainModule).start(wait = true)
 }
 

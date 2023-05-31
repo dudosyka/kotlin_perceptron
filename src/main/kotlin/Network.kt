@@ -83,6 +83,9 @@ class Network(
             println("Start epoch $i")
             println("Current mistake: ${getMistakeMetric()}")
 
+            if (getMistakeMetric() <= 0.05)
+                break
+
             hidden.clear()
             createLayer(input, hiddenMatrix).forEach {
                 hidden.add(HiddenNeuron(it))
