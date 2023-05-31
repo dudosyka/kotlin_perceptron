@@ -8,8 +8,8 @@ import kotlin.math.pow
 class Network(
     private val inputData: InputData
 ) {
-    private val n = 0.3
-    private val alpha = 0.6
+    private val n = 0.7
+    private val alpha = 0.3
     private var input: MutableList<InputNeuron> = mutableListOf()
     private val hidden: MutableList<HiddenNeuron> = mutableListOf()
     private val output: MutableList<OutputNeuron> = mutableListOf()
@@ -61,7 +61,7 @@ class Network(
                 sum += (item.activate() - inputData.answer[i]).pow(2)
             }
         }
-        return sum.round(4)
+        return sum.round(5)
     }
 
     private fun calculateNewWeight(neuron: Neuron, oldWeight: Double, oldDelta: Double): Pair<Double, Double> {
@@ -82,9 +82,6 @@ class Network(
         for (i in 1..inputData.learnEpoch) {
             println("Start epoch $i")
             println("Current mistake: ${getMistakeMetric()}")
-
-            if (getMistakeMetric() <= 0.05)
-                break
 
             hidden.clear()
             createLayer(input, hiddenMatrix).forEach {

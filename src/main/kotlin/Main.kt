@@ -1,4 +1,4 @@
-import dto.InputData
+import dto.Input
 import dto.OutputData
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -17,7 +17,7 @@ fun Double.round(decimals: Int = 6): Double {
 }
 
 fun main() {
-    embeddedServer(Netty, port = 8080, module = Application::mainModule).start(wait = true)
+    embeddedServer(Netty, port = 8082, module = Application::mainModule).start(wait = true)
 }
 
 fun Application.mainModule() {
@@ -31,22 +31,29 @@ fun Application.mainModule() {
     }
     routing {
         post("/") {
-            val input = call.receive<List<InputData>>()
+            val input = call.receive<Input>()
             val output : MutableList<OutputData> = mutableListOf()
             println(input)
-            input.forEach {
+            input.input.forEach {
                 val network = Network(it)
                 network.run()
                 try {
-                    val newWeights = network.backPropagation()
+                    println(it.learnEpoch)
+                    output.add(if (it.learnEpoch > 0) {
+                        val newWeights = network.backPropagation()
 
-                    val out = OutputData(
-                        pvk = network.getResult(),
-                        mistake = network.getMistakeMetric().round(4),
-                        hiddenMatrix = newWeights.first,
-                        outputMatrix = newWeights.second
-                    )
-                    output.add(out)
+                        OutputData(
+                            pvk = network.getResult(),
+                            mistake = network.getMistakeMetric().round(4),
+                            hiddenMatrix = newWeights.first,
+                            outputMatrix = newWeights.second
+                        )
+                    } else {
+                        OutputData(
+                            pvk = network.getResult(),
+                            mistake = 0.0
+                        )
+                    })
 
                 } catch (e: Exception) {
                     println(e)

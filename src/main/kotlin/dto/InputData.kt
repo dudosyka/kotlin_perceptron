@@ -10,3 +10,8 @@ data class InputData (
     val answer: List<Double>,
     val learnEpoch: Int
 )
+
+@Serializable
+data class Input (
+    val input: List<InputData>
+)
