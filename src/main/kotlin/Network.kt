@@ -12,6 +12,7 @@ class Network(
     private val alpha = 0.3
     private var input: MutableList<InputNeuron> = mutableListOf()
     private val hidden: MutableList<HiddenNeuron> = mutableListOf()
+    private val calculationLayers: MutableList<MutableList<HiddenNeuron>> = mutableListOf()
     private val output: MutableList<OutputNeuron> = mutableListOf()
 
     fun run() {
@@ -30,8 +31,27 @@ class Network(
             println(it)
         }
 
+        inputData.calculationLayers.forEachIndexed {
+            index, value -> run {
+                calculationLayers.add(mutableListOf())
+                createLayer(hidden, value).forEach {
+                    calculationLayers[index].add(HiddenNeuron(it))
+                }
+            }
+        }
+        calculationLayers.forEach { layer ->
+            println("Calculation layers:")
+            layer.forEach {
+                println(it)
+            }
+        }
+        println()
 
-        createLayer(hidden, inputData.outputMatrix).forEach {
+
+        val calculateBy = if (calculationLayers.size > 0) calculationLayers.last() else hidden
+
+
+        createLayer(calculateBy, inputData.outputMatrix).forEach {
             output.add(OutputNeuron(it))
         }
         output.forEach {
@@ -75,6 +95,12 @@ class Network(
         val deltasHidden = hiddenMatrix.map {
             it.map { 0.0 }.toMutableList()
         }
+        var calculation = inputData.calculationLayers
+        val deltasCalculation = calculation.map { layer ->
+            layer.map {
+                it.map { 0.0 }.toMutableList()
+            }
+        }
         var outputMatrix = inputData.outputMatrix
         val deltasOutput = outputMatrix.map {
             it.map { 0.0 }.toMutableList()
@@ -88,8 +114,20 @@ class Network(
                 hidden.add(HiddenNeuron(it))
             }
 
+            calculationLayers.clear()
+            calculation.forEachIndexed {
+                index, value -> run {
+                    calculationLayers.add(mutableListOf())
+                    createLayer(hidden, value).forEach {
+                        calculationLayers[index].add(HiddenNeuron(it))
+                    }
+                }
+            }
+
+            var calculateBy: MutableList<out Neuron> = if (calculationLayers.size > 0) calculationLayers.last() else hidden
+
             output.clear()
-            createLayer(hidden, outputMatrix).forEach {
+            createLayer(calculateBy, outputMatrix).forEach {
                 output.add(OutputNeuron(it))
             }
 
@@ -105,9 +143,30 @@ class Network(
                     }
                 }
             }
+            calculation = calculationLayers.asReversed().mapIndexed {
+                layerIndex, layer ->
+                    layer.mapIndexed {
+                        index, item -> run {
+                            val sumOfChildren = output.sumOf {
+                                it.inputNeuron[index].second * it.q
+                            }
+                            item.q = item.activate() * (1 - item.activate()) * sumOfChildren
+                            return@run item.inputNeuron.mapIndexed {
+                                indexIn, it -> run {
+                                    val newWeight = calculateNewWeight(item, it.second, deltasCalculation[layerIndex][index][indexIn])
+                                    deltasCalculation[layerIndex][index][indexIn] = newWeight.second
+                                    newWeight.first.round()
+                                }
+                            }
+                        }
+                    }
+            }
+
+            calculateBy = if (calculationLayers.size > 0) calculationLayers.last() else output
+
             hiddenMatrix = hidden.mapIndexed {
                 index, item -> run {
-                    val sumOfChildren = output.sumOf {
+                    val sumOfChildren = calculateBy.sumOf {
                         it.inputNeuron[index].second * it.q
                     }
                     item.q = item.activate() * (1 - item.activate()) * sumOfChildren

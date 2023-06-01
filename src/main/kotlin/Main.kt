@@ -36,8 +36,8 @@ fun Application.mainModule() {
             println(input)
             input.input.forEach {
                 val network = Network(it)
-                network.run()
                 try {
+                    network.run()
                     println(it.learnEpoch)
                     output.add(if (it.learnEpoch > 0) {
                         val newWeights = network.backPropagation()
